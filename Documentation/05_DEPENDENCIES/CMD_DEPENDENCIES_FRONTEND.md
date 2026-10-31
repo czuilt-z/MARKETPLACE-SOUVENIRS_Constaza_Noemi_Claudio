@@ -1,0 +1,6 @@
+Carpeta Vacía
+
+npm create vite .
+npm install react-bootstrap bootstrap
+npm install react-router-dom
+npm install axios
