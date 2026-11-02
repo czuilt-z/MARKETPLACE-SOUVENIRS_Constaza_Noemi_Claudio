@@ -11,7 +11,7 @@
 ## 2. Dependencias Backend
 
 - Express
-- MySQL2
+- PostgreSQL
 - bcrypt
 
 ## 3. Tecnologías complementarias
