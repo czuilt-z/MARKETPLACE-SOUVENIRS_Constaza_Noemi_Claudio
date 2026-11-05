@@ -1,4 +1,7 @@
+import { useNavigate } from 'react-router-dom'
+
 function ProductCard({ producto }) {
+  const navigate = useNavigate()
   return (
     <div className="card h-100 shadow-sm">
       <img
@@ -17,11 +20,14 @@ function ProductCard({ producto }) {
           {producto.descripcion}
         </p>
 
-        <h5 className="text-primary fw-bold mt-auto">
+        <h5 className="card-title fw-bold mt-auto">
           ${producto.precio}
         </h5>
 
-        <button className="btn btn-arotopia mt-3">
+        <button
+          className="btn btn-arotopia mt-3"
+          onClick={() => navigate(`/productos/${producto.id}`)}
+        >
           Ver producto
         </button>
       </div>

@@ -1,7 +1,10 @@
-
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
 function Navbar() {
+
+  const { usuario, cerrarSesion } = useAuth()
+  
   return (
     <nav className="navbar navbar-expand-lg navbar-dark navbar-arotopia">
       <div className="container">
@@ -37,6 +40,29 @@ function Navbar() {
               </Link>
             </li>
 
+            {usuario ? (
+            <>
+            <li className="nav-item">
+              <Link className="nav-link" to="/perfil">
+                Mi cuenta
+              </Link>
+            </li>
+
+            <li className="nav-item">
+              <button
+                className="nav-link btn btn-link"
+                onClick={() => {
+                  cerrarSesion()
+                  window.location.href = '/'
+                }}
+                style={{ textDecoration: 'none' }}
+              >
+                Cerrar sesión
+              </button>
+            </li>
+          </>
+        ) : (
+          <>
             <li className="nav-item">
               <Link className="nav-link" to="/login">
                 Iniciar sesión
@@ -48,7 +74,20 @@ function Navbar() {
                 Registrarse
               </Link>
             </li>
+          </>
+        )}
 
+            <li className="nav-item ms-lg-3">
+              <Link
+                className="nav-link"
+                to="/carrito"
+                style={{ fontSize: '1.4rem' }}
+                aria-label="Ir al carrito"
+                title="Mi carrito"
+              >
+                🛒
+              </Link>
+            </li>
           </ul>
         </div>
       </div>

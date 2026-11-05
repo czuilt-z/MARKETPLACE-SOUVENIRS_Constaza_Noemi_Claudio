@@ -1,4 +1,3 @@
-
 import { Routes, Route } from 'react-router-dom'
 
 import Navbar from './components/Navbar'
@@ -15,6 +14,7 @@ import MyData from './pages/MyData'
 import MyPublications from './pages/MyPublications'
 import CreatePublication from './pages/CreatePublication'
 import EditPublication from './pages/EditPublication'
+import NotFound from './pages/NotFound'
 import './App.css'
 
 function App() {
@@ -37,6 +37,9 @@ function App() {
         <Route path="/mis-publicaciones" element={<MyPublications />} />
         <Route path="/crear-publicacion" element={<CreatePublication />} />
         <Route path="/editar-publicacion/:id" element={<EditPublication />} />
+
+        {/*rutas inexistentes*/}
+        <Route path="*" element={<NotFound />} />
       </Routes>
 
       <Footer />
