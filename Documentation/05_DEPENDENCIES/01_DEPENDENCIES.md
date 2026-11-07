@@ -3,8 +3,10 @@
 ## 1. Dependencias Frontend
 
 - React
+- React Dom
 - React Router DOM
 - Bootstrap
+- React Bootstrap
 - Axios
 - Vite
 
@@ -21,3 +23,9 @@
 - JavaScript
 - Node.js
 - MySQL
+
+
+
+# Comandos
+
+dev, build, lint y preview
