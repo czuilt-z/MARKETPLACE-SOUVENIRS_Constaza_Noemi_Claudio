@@ -33,7 +33,7 @@ DB_NAME=marketplace
 JWT_SECRET=una_clave_secreta_larga
 JWT_EXPIRES_IN=2h
 
-# Orígenes permitidos por CORS (puertos del frontend), separados por coma
+
 CORS_ORIGIN=http://localhost:5173,http://localhost:5174
 ```
 
