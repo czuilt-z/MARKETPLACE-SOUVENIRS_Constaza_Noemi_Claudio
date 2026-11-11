@@ -1,26 +1,39 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-/*función para probar login sin conectar api*/
+import { mensajeError } from '../api/utils'
+
 function Login() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [enviando, setEnviando] = useState(false)
 
   const { iniciarSesion } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const destino = location.state?.desde || '/'
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     if (!email.trim() || !password.trim()) {
-      alert('Por favor, completa todos los campos.')
+      setError('Por favor, completa todos los campos.')
       return
     }
 
-    iniciarSesion(email)
-    navigate('/')
+    try {
+      setEnviando(true)
+      setError('')
+      await iniciarSesion(email.trim(), password)
+      navigate(destino, { replace: true })
+    } catch (err) {
+      setError(mensajeError(err, 'No se pudo iniciar sesión.'))
+    } finally {
+      setEnviando(false)
+    }
   }
 
   return (
@@ -54,6 +67,12 @@ function Login() {
             <div className="card-body p-4 p-md-5">
 
               <form onSubmit={handleSubmit}>
+                {error && (
+                  <div className="alert alert-danger py-2" role="alert">
+                    {error}
+                  </div>
+                )}
+
                 <div className="mb-4">
                   <label
                     htmlFor="email"
@@ -67,6 +86,7 @@ function Login() {
                     type="email"
                     className="form-control"
                     id="email"
+                    autoComplete="email"
                     placeholder="Ingresa tu correo"
                     style={{ borderColor: '#D9A6A0' }}
                     value={email}
@@ -87,6 +107,7 @@ function Login() {
                     type="password"
                     className="form-control"
                     id="password"
+                    autoComplete="current-password"
                     placeholder="Ingresa tu contraseña"
                     style={{ borderColor: '#D9A6A0' }}
                     value={password}
@@ -97,8 +118,9 @@ function Login() {
                 <button
                   type="submit"
                   className="btn btn-arotopia w-100 mt-2"
+                  disabled={enviando}
                 >
-                  Iniciar sesión
+                  {enviando ? 'Ingresando...' : 'Iniciar sesión'}
                 </button>
 
                 <div className="text-center mt-4">

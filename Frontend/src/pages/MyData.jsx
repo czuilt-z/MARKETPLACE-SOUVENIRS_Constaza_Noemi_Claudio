@@ -1,24 +1,43 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import api from '../api/axiosConfig'
 import { useAuth } from '../context/AuthContext'
+import { useUbicacion } from '../hooks/useUbicacion'
+import EstadoCarga from '../components/EstadoCarga'
+import { mensajeError } from '../api/utils'
 
 function MyData() {
-/*constante de autentificación temporal*/
   const { usuario, actualizarUsuario } = useAuth()
+  const { regiones, comunasDeRegion, regionDeComuna } = useUbicacion()
 
-  const [datos, setDatos] = useState(() => {
-    const datosGuardados = localStorage.getItem('datosPersonales')
+  const [datos, setDatos] = useState(null)
+  const [idRegion, setIdRegion] = useState('')
+  const [cargando, setCargando] = useState(true)
+  const [aviso, setAviso] = useState(null)
+  const [guardando, setGuardando] = useState(false)
 
-    return datosGuardados
-      ? JSON.parse(datosGuardados)
-      : {
-          nombre: '',
-          apellido: '',
-          email: usuario?.email || '',
-          telefono: '',
-          direccion: '',
-        }
-  })
+  // GET /usuarios/:id_usuario
+  useEffect(() => {
+    const cargar = async () => {
+      try {
+        const { data } = await api.get(`/usuarios/${usuario.id_usuario}`)
+        setDatos({
+          nombre_usuario: data.nombre_usuario || '',
+          apellido_usuario: data.apellido_usuario || '',
+          email_usuario: data.email_usuario || '',
+          telefono_usuario: data.telefono_usuario || '',
+          direccion_usuario: data.direccion_usuario || '',
+          id_comuna: data.id_comuna || '',
+        })
+      } catch (err) {
+        setAviso({ tipo: 'danger', texto: mensajeError(err, 'No se pudieron cargar tus datos.') })
+      } finally {
+        setCargando(false)
+      }
+    }
+    cargar()
+  }, [usuario.id_usuario])
 
+   const regionMostrada = idRegion || regionDeComuna(datos?.id_comuna)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -29,14 +48,34 @@ function MyData() {
     }))
   }
 
-  const handleSubmit = (e) => {
+  const handleRegion = (e) => {
+    setIdRegion(e.target.value)
+    setDatos((actual) => ({ ...actual, id_comuna: '' }))
+  }
+
+  // PUT /usuarios/:id_usuario
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
-    localStorage.setItem('datosPersonales', JSON.stringify(datos))
+    const obligatorios = ['nombre_usuario', 'apellido_usuario', 'email_usuario', 'direccion_usuario']
+    if (obligatorios.some((campo) => !String(datos[campo]).trim())) {
+      setAviso({ tipo: 'danger', texto: 'Nombre, apellido, correo y dirección son obligatorios.' })
+      return
+    }
 
-    actualizarUsuario({ email: datos.email })
-
-    alert('Tus datos se han guardado correctamente.')
+    try {
+      setGuardando(true)
+      await api.put(`/usuarios/${usuario.id_usuario}`, {
+        ...datos,
+        id_comuna: datos.id_comuna ? Number(datos.id_comuna) : null,
+      })
+      actualizarUsuario({ nombre_usuario: datos.nombre_usuario, email: datos.email_usuario })
+      setAviso({ tipo: 'success', texto: 'Tus datos se han guardado correctamente.' })
+    } catch (err) {
+      setAviso({ tipo: 'danger', texto: mensajeError(err, 'No se pudieron guardar los cambios.') })
+    } finally {
+      setGuardando(false)
+    }
   }
 
   return (
@@ -55,71 +94,74 @@ function MyData() {
                 Mis datos
               </h2>
 
-              <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                  <label className="form-label">Nombre</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Ingresa tu nombre"
-                    name="nombre"
-                    value={datos.nombre}
-                    onChange={handleChange}
-                  />
+              {aviso && (
+                <div className={`alert alert-${aviso.tipo} py-2`} role="alert">
+                  {aviso.texto}
                 </div>
+              )}
 
-                <div className="mb-3">
-                  <label className="form-label">Apellido</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Ingresa tu apellido"
-                    name="apellido"
-                    value={datos.apellido}
-                    onChange={handleChange}
-                  />
-                </div>
+              <EstadoCarga cargando={cargando}>
+                {datos && (
+                <form onSubmit={handleSubmit}>
+                  <div className="row g-3 mb-3">
+                    <div className="col-sm-6">
+                      <label className="form-label" htmlFor="nombre">Nombre</label>
+                      <input id="nombre" type="text" className="form-control" name="nombre_usuario" autoComplete="given-name"
+                        value={datos.nombre_usuario} onChange={handleChange} />
+                    </div>
+                    <div className="col-sm-6">
+                      <label className="form-label" htmlFor="apellido">Apellido</label>
+                      <input id="apellido" type="text" className="form-control" name="apellido_usuario" autoComplete="family-name"
+                        value={datos.apellido_usuario} onChange={handleChange} />
+                    </div>
+                  </div>
 
-                <div className="mb-3">
-                  <label className="form-label">Correo electrónico</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    placeholder="correo@ejemplo.com"
-                    name="email"
-                    value={datos.email}
-                    onChange={handleChange}
-                  />
-                </div>
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="email">Correo electrónico</label>
+                    <input id="email" type="email" className="form-control" name="email_usuario" autoComplete="email"
+                      value={datos.email_usuario} onChange={handleChange} />
+                  </div>
 
-                <div className="mb-3">
-                  <label className="form-label">Teléfono</label>
-                  <input
-                    type="tel"
-                    className="form-control"
-                    placeholder="Ingresa tu teléfono"
-                    name="telefono"
-                    value={datos.telefono}
-                    onChange={handleChange}
-                  />
-                </div>
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="telefono">Teléfono</label>
+                    <input id="telefono" type="tel" className="form-control" name="telefono_usuario" autoComplete="tel"
+                      value={datos.telefono_usuario} onChange={handleChange} />
+                  </div>
 
-                <div className="mb-3">
-                  <label className="form-label">Dirección</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Ingresa tu dirección"
-                    name="direccion"
-                    value={datos.direccion}
-                    onChange={handleChange}
-                  />
-                </div>
+                  <div className="mb-3">
+                    <label className="form-label" htmlFor="direccion">Dirección de despacho (calle y número)</label>
+                    <input id="direccion" type="text" className="form-control" name="direccion_usuario" autoComplete="street-address"
+                      value={datos.direccion_usuario} onChange={handleChange} />
+                  </div>
 
-                <button type="submit" className="btn btn-arotopia w-100 mt-3">
-                  Guardar cambios
-                </button>
-              </form>
+                  <div className="row g-3 mb-3">
+                    <div className="col-sm-6">
+                      <label className="form-label" htmlFor="region">Región</label>
+                      <select id="region" className="form-select" value={regionMostrada} onChange={handleRegion}>
+                        <option value="">Selecciona una región</option>
+                        {regiones.map((r) => (
+                          <option key={r.id_region} value={r.id_region}>{r.nombre_region}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-sm-6">
+                      <label className="form-label" htmlFor="comuna">Comuna</label>
+                      <select id="comuna" className="form-select" name="id_comuna"
+                        value={datos.id_comuna} onChange={handleChange} disabled={!regionMostrada}>
+                        <option value="">Selecciona una comuna</option>
+                        {comunasDeRegion(regionMostrada).map((c) => (
+                          <option key={c.id_comuna} value={c.id_comuna}>{c.nombre_comuna}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <button type="submit" className="btn btn-arotopia w-100 mt-3" disabled={guardando}>
+                    {guardando ? 'Guardando...' : 'Guardar cambios'}
+                  </button>
+                </form>
+                )}
+              </EstadoCarga>
             </div>
           </div>
         </div>

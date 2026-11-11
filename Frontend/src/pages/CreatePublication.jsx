@@ -1,11 +1,30 @@
-import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import api from '../api/axiosConfig'
+import PublicationForm from '../components/PublicationForm'
+import { mensajeError } from '../api/utils'
 
 function CreatePublication() {
-  const [imagen, setImagen] = useState(null)
-  const [vistaPrevia, setVistaPrevia] = useState('')
+  const navigate = useNavigate()
+
+  const crear = async (formulario) => {
+    try {
+      const datos = new FormData()
+      datos.append('titulo_publicacion', formulario.titulo.trim())
+      datos.append('descripcion_publicacion', formulario.descripcion.trim())
+      datos.append('valor_publicacion', Number(formulario.precio))
+      datos.append('stock_publicacion', Number(formulario.stock) || 0)
+      datos.append('id_categoria', Number(formulario.idCategoria))
+      if (formulario.archivo) datos.append('imagen', formulario.archivo)
+
+      await api.post('/publicaciones', datos)
+      navigate('/mis-publicaciones')
+    } catch (err) {
+      throw new Error(mensajeError(err, 'No se pudo crear la publicación.'))
+    }
+  }
 
   return (
-    <div className="container py-5">
+    <main className="container py-5">
       <div className="row justify-content-center">
         <div className="col-md-9 col-lg-8">
           <div
@@ -15,114 +34,20 @@ function CreatePublication() {
               backgroundColor: '#FFF9F5',
             }}
           >
-            <div className="card-body p-4">
-              <h2 className="fw-bold mb-4" style={{ color: '#67434A' }}>
+            <div className="card-body p-4 p-md-5">
+              <h2 className="fw-bold mb-2" style={{ color: '#67434A' }}>
                 Crear publicación
               </h2>
+              <p className="text-muted mb-4">
+                Completa los datos de tu producto para publicarlo en Arotopía.
+              </p>
 
-              <form>
-                <div className="mb-3">
-                  <label className="form-label">Nombre del producto</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Ingresa el nombre del producto"
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Descripción</label>
-                  <textarea
-                    className="form-control"
-                    rows="4"
-                    placeholder="Describe las características del producto"
-                  />
-                </div>
-
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label">Precio</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      min="0"
-                      placeholder="Ej. 15000"
-                    />
-                  </div>
-
-                  <div className="col-md-6 mb-3">
-                    <label className="form-label">Stock disponible</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      min="0"
-                      placeholder="Cantidad"
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Categoría</label>
-                  <select className="form-select" defaultValue="">
-                    <option value="" disabled>Selecciona una categoría</option>
-                    <option value="artesania">Artesanía</option>
-                    <option value="decoracion">Decoración</option>
-                    <option value="souvenirs">Souvenirs</option>
-                  </select>
-                </div>
-
-                <div className="mb-4">
-                  <label className="form-label fw-semibold">
-                    Imagen del producto
-                  </label>
-
-                  <input
-                    type="file"
-                    className="form-control"
-                    accept="image/*"
-                    style={{ borderColor: '#D9A6A0' }}
-                    onChange={(e) => {
-                      const archivo = e.target.files[0]
-
-                      if (archivo) {
-                        setImagen(archivo)
-                        setVistaPrevia(URL.createObjectURL(archivo))
-                      }
-                    }}
-                  />
-                </div>
-
-                {vistaPrevia && (
-                  <div className="mb-4 text-center">
-                    <p className="fw-semibold mb-2" style={{ color: '#67434A' }}>
-                      Vista previa de la imagen
-                    </p>
-
-                    <img
-                      src={vistaPrevia}
-                      alt="Vista previa del producto"
-                      className="img-fluid rounded"
-                      style={{
-                        maxHeight: '250px',
-                        maxWidth: '100%',
-                        objectFit: 'contain',
-                        border: '1px solid #D9A6A0',
-                        padding: '8px',
-                        backgroundColor: '#FFF9F5',
-                      }}
-                    />
-                  </div>
-                )}
-
-                <button type="submit" className="btn btn-arotopia w-100">
-                  Publicar producto
-                </button>
-              </form>
+              <PublicationForm textoBoton="Publicar producto" onGuardar={crear} />
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }
 

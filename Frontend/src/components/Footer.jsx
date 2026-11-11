@@ -18,7 +18,6 @@ function Footer() {
             <ul className="list-unstyled">
               <li><a href="/" className="text-white text-decoration-none">Inicio</a></li>
               <li><a href="/productos" className="text-white text-decoration-none">Productos</a></li>
-              <li><a href="/login" className="text-white text-decoration-none">Iniciar sesión</a></li>
             </ul>
           </div>
 

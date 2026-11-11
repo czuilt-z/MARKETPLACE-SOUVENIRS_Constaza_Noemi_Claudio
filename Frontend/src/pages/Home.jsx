@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import ProductCard from '../components/ProductCard'
+import EstadoCarga from '../components/EstadoCarga'
+import { usePublicaciones } from '../hooks/usePublicaciones'
 
 function Home() {
   const imagenes = [
@@ -9,37 +11,9 @@ function Home() {
 ]
 
   const [imagenActual, setImagenActual] = useState(0)
-  
-    const productos = [
-  {
-    id: 1,
-    titulo: 'Amigurumi Batman',
-    descripcion: 'Producto elaborado por artesanos locales.',
-    precio: 5990,
-    imagen: '/imagenes/Batman.jpeg',
-  },
-  {
-    id: 2,
-    titulo: 'Aros Totoro',
-    descripcion: 'Un detalle especial para regalar.',
-    precio: 7990,
-    imagen: '/imagenes/Totoro.jpeg',
-  },
-  {
-    id: 3,
-    titulo: 'Aros Venasur',
-    descripcion: 'Una pieza inspirada en nuestra cultura.',
-    precio: 8990,
-    imagen: '/imagenes/venasur.jpeg',
-  },
-  {
-    id: 4,
-    titulo: 'Amigurumi Spiderman',
-    descripcion: 'Un recuerdo único para cualquier ocasión.',
-    precio: 6990,
-    imagen: '/imagenes/Spiderman.jpeg',
-  },
-]
+
+  const { publicaciones, cargando, error } = usePublicaciones()
+  const novedades = publicaciones.slice(0, 4)
 
   const anterior = () => {
     setImagenActual((actual) =>
@@ -58,13 +32,22 @@ function Home() {
       <section className="container-fluid px-0 mt-4">
         <div
           className="position-relative"
-          style={{ height: '300px', overflow: 'hidden' }}
+          style={{ height: 'clamp(320px, 60vh, 520px)', overflow: 'hidden', backgroundColor: '#F4E8DF' }}
         >
+          {/* Fondo: la misma imagen desenfocada para rellenar los costados */}
+          <img
+            src={imagenes[imagenActual]}
+            alt=""
+            aria-hidden="true"
+            className="position-absolute top-0 start-0 w-100 h-100"
+            style={{ objectFit: 'cover', filter: 'blur(24px) brightness(0.85)', transform: 'scale(1.1)' }}
+          />
+          {/* Imagen completa, sin recortar */}
           <img
           src={imagenes[imagenActual]}
           alt="Productos y novedades de Arotopía"
-          className="w-100 h-100"
-          style={{ objectFit: 'cover' }}
+          className="position-relative w-100 h-100"
+          style={{ objectFit: 'contain' }}
           />
 
         <button
@@ -102,13 +85,15 @@ function Home() {
                   Novedades
                 </h2>
 
-            <div className="row g-4">
-                {productos.map((producto) => (
-                 <div className="col-12 col-sm-6 col-lg-3" key={producto.id}>
-                <ProductCard producto={producto} />
-                </div>
+            <EstadoCarga cargando={cargando} error={error}>
+              <div className="row g-4">
+                {novedades.map((producto) => (
+                  <div className="col-12 col-sm-6 col-lg-3" key={producto.id}>
+                    <ProductCard producto={producto} />
+                  </div>
                 ))}
-            </div>
+              </div>
+            </EstadoCarga>
         </section> 
     
         <section className="container my-5 py-4">

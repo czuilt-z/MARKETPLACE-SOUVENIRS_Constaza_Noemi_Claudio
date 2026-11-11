@@ -12,9 +12,8 @@ Authorization: Bearer <token>
 ```
 
 Roles del sistema:
-- **Administrador:** administra usuarios, modifica roles y gestiona publicaciones.
-- **Vendedor:** crea, edita y elimina sus propias publicaciones.
-- **Cliente:** consulta publicaciones y administra su carrito.
+- **Usuario (id_rol 2):** puede comprar y vender: administra su carrito y crea, edita y elimina sus propias publicaciones. No puede comprar sus propias publicaciones.
+- **Administrador (id_rol 1):** puede hacer todo: administra usuarios, modifica roles, edita y elimina publicaciones de cualquier usuario y usa el carrito.
 
 ---
 
@@ -23,7 +22,7 @@ Roles del sistema:
 ### `POST /auth/registro`
 
 - **Auth Required:** `false`
-- **Descripción:** Registra un nuevo cliente o vendedor.
+- **Descripción:** Registra un nuevo usuario (puede comprar y vender). Toda cuenta nueva queda con `id_rol` 2; `id_rol` es opcional y si se envía otro valor responde 400.
 
 **Request:**
 
@@ -35,7 +34,6 @@ Roles del sistema:
   "email_usuario": "juan@gmail.com",
   "contrasena_usuario": "Clave123",
   "telefono_usuario": "912345678",
-  "id_rol": 3,
   "id_comuna": 1
 }
 ```
@@ -72,7 +70,7 @@ Roles del sistema:
   "usuario": {
     "id_usuario": 1,
     "nombre_usuario": "Juan",
-    "id_rol": 3
+    "id_rol": 2
   }
 }
 ```
@@ -93,7 +91,7 @@ Roles del sistema:
     "apellido_usuario": "Pérez",
     "email_usuario": "juan@gmail.com",
     "telefono_usuario": "912345678",
-    "id_rol": 3,
+    "id_rol": 2,
     "id_comuna": 1,
     "fecha_registro": "2026-10-30T10:00:00"
   }
@@ -116,7 +114,7 @@ Roles del sistema:
   "direccion_usuario": "Av. Central 123",
   "email_usuario": "juan@gmail.com",
   "telefono_usuario": "912345678",
-  "id_rol": 3,
+  "id_rol": 2,
   "id_comuna": 1,
   "fecha_registro": "2026-10-30T10:00:00"
 }
@@ -159,7 +157,7 @@ Roles del sistema:
 
 ```json
 {
-  "id_rol": 2
+  "id_rol": 1
 }
 ```
 
@@ -247,8 +245,9 @@ Roles del sistema:
 ### `POST /publicaciones`
 
 - **Auth Required:** `true` (Token)
-- **Role Required:** Vendedor
+- **Role Required:** Usuario o administrador
 - **Descripción:** Crea una nueva publicación. El usuario propietario se obtiene del token.
+- **Formato:** JSON (con `imagenes` como lista de URLs) o `multipart/form-data` con los mismos campos y un archivo en el campo `imagen` (JPG, PNG, WEBP o GIF, máx. 5 MB). Los archivos quedan disponibles en `/uploads/<nombre>`.
 
 **Request:**
 
@@ -277,7 +276,7 @@ Roles del sistema:
 ### `PUT /publicaciones/:id_publicacion`
 
 - **Auth Required:** `true` (Token)
-- **Role Required:** Vendedor propietario o administrador.
+- **Role Required:** Usuario propietario o administrador.
 - **Descripción:** Actualiza una publicación existente.
 
 **Request:**
@@ -303,7 +302,7 @@ Roles del sistema:
 ### `DELETE /publicaciones/:id_publicacion`
 
 - **Auth Required:** `true` (Token)
-- **Role Required:** Vendedor propietario o administrador.
+- **Role Required:** Usuario propietario o administrador.
 - **Descripción:** Elimina o desactiva una publicación. Se recomienda cambiar `estado_publicacion` a `eliminada`.
 
 **Response:**
@@ -321,8 +320,8 @@ Roles del sistema:
 ### `POST /publicaciones/:id_publicacion/imagenes`
 
 - **Auth Required:** `true` (Token)
-- **Role Required:** Vendedor propietario o administrador.
-- **Descripción:** Agrega una imagen a una publicación.
+- **Role Required:** Usuario propietario o administrador.
+- **Descripción:** Agrega una imagen a una publicación. Acepta JSON con `url_img` o `multipart/form-data` con un archivo en el campo `imagen`.
 
 **Request:**
 
@@ -337,15 +336,16 @@ Roles del sistema:
 ```json
 {
   "mensaje": "Imagen agregada correctamente",
-  "id_imgen_publicacion": 1
+  "id_imgen_publicacion": 1,
+  "url_img": "/uploads/1793933153419-c4d02d74afe2.jpg"
 }
 ```
 
 ### `DELETE /imagenes/:id_imgen_publicacion`
 
 - **Auth Required:** `true` (Token)
-- **Role Required:** Vendedor propietario o administrador.
-- **Descripción:** Elimina una imagen de una publicación.
+- **Role Required:** Usuario propietario o administrador.
+- **Descripción:** Elimina una imagen de una publicación (si fue subida como archivo, también se borra del servidor).
 
 **Response:**
 
@@ -362,7 +362,7 @@ Roles del sistema:
 ### `GET /carrito`
 
 - **Auth Required:** `true` (Token)
-- **Role Required:** Cliente
+- **Role Required:** Usuario o administrador
 - **Descripción:** Obtiene los productos del carrito del usuario autenticado.
 
 **Response:**
@@ -386,7 +386,7 @@ Roles del sistema:
 ### `POST /carrito`
 
 - **Auth Required:** `true` (Token)
-- **Role Required:** Cliente
+- **Role Required:** Usuario o administrador
 - **Descripción:** Agrega una publicación al carrito. Si el producto ya existe, se puede actualizar su cantidad.
 
 **Request:**
@@ -409,7 +409,7 @@ Roles del sistema:
 ### `PATCH /carrito/:id_detalle_carro`
 
 - **Auth Required:** `true` (Token)
-- **Role Required:** Cliente
+- **Role Required:** Usuario o administrador
 - **Descripción:** Modifica la cantidad de un producto del carrito.
 
 **Request:**
@@ -431,7 +431,7 @@ Roles del sistema:
 ### `DELETE /carrito/:id_detalle_carro`
 
 - **Auth Required:** `true` (Token)
-- **Role Required:** Cliente
+- **Role Required:** Usuario o administrador
 - **Descripción:** Elimina un producto del carrito.
 
 **Response:**
@@ -445,7 +445,7 @@ Roles del sistema:
 ### `DELETE /carrito/vaciar`
 
 - **Auth Required:** `true` (Token)
-- **Role Required:** Cliente
+- **Role Required:** Usuario o administrador
 - **Descripción:** Elimina todos los productos del carrito sin eliminar el registro del carrito.
 
 **Response:**
@@ -494,6 +494,27 @@ Roles del sistema:
     "id_comuna": 2,
     "nombre_comuna": "La Florida",
     "id_region": 1
+  }
+]
+```
+
+---
+
+## 🏷️ Categorías
+
+### `GET /categorias`
+
+- **Auth Required:** `false`
+- **Descripción:** Obtiene las categorías de publicaciones (para filtros y formularios).
+
+**Response:**
+
+```json
+[
+  {
+    "id_categoria": 1,
+    "categoria": "Artesanía",
+    "descripcion": "Productos hechos a mano"
   }
 ]
 ```

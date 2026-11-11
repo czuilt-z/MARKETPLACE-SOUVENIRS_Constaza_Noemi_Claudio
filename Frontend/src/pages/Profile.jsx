@@ -1,13 +1,17 @@
+import { startTransition } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
+import { NOMBRE_ROL } from '../api/utils'
 
 function Profile() {
-  const { usuario, cerrarSesion } = useAuth()
+  const { usuario, cerrarSesion, esAdmin, puedePublicar, puedeComprar } = useAuth()
   const navigate = useNavigate()
 
   const handleLogout = () => {
-    cerrarSesion()
-    navigate('/')
+    startTransition(() => {
+      navigate('/')
+      cerrarSesion()
+    })
   }
 
   return (
@@ -34,7 +38,7 @@ function Profile() {
                   color: '#FFF9F5',
                 }}
               >
-                {usuario?.email?.charAt(0).toUpperCase() || 'U'}
+                {(usuario?.nombre_usuario || usuario?.email)?.charAt(0).toUpperCase() || 'U'}
               </div>
 
               <h2 className="fw-bold" style={{ color: '#67434A' }}>
@@ -42,8 +46,12 @@ function Profile() {
               </h2>
 
               <p className="text-muted">
-                Bienvenido/a a tu cuenta de Arotopía.
+                Hola {usuario?.nombre_usuario}, bienvenido/a a tu cuenta de Arotopía.
               </p>
+
+              <span className="badge rounded-pill" style={{ backgroundColor: '#A65F67' }}>
+                {NOMBRE_ROL[usuario?.id_rol]}
+              </span>
 
               <div
                 className="rounded-3 p-3 my-4 text-start"
@@ -67,12 +75,32 @@ function Profile() {
                   Mis datos
                 </Link>
 
-                <Link
-                  to="/mis-publicaciones"
-                  className="btn btn-arotopia"
-                >
-                  Mis publicaciones
-                </Link>
+                {puedePublicar && (
+                  <Link
+                    to="/mis-publicaciones"
+                    className="btn btn-arotopia"
+                  >
+                    {esAdmin ? 'Administrar publicaciones' : 'Mis publicaciones'}
+                  </Link>
+                )}
+
+                {esAdmin && (
+                  <Link
+                    to="/admin/usuarios"
+                    className="btn btn-arotopia"
+                  >
+                    Administrar usuarios
+                  </Link>
+                )}
+
+                {puedeComprar && (
+                  <Link
+                    to="/carrito"
+                    className="btn btn-arotopia"
+                  >
+                    Mi carrito
+                  </Link>
+                )}
 
                 <button
                   className="btn btn-arotopia"

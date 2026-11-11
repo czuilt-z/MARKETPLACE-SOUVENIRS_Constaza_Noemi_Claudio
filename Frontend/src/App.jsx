@@ -2,6 +2,8 @@ import { Routes, Route } from 'react-router-dom'
 
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import RutaPrivada from './components/RutaPrivada'
+import { ROLES } from './api/utils'
 
 import Home from './pages/Home'
 import Products from './pages/Products'
@@ -15,6 +17,7 @@ import MyPublications from './pages/MyPublications'
 import CreatePublication from './pages/CreatePublication'
 import EditPublication from './pages/EditPublication'
 import NotFound from './pages/NotFound'
+import AdminUsers from './pages/AdminUsers'
 import './App.css'
 
 function App() {
@@ -31,12 +34,23 @@ function App() {
         <Route path="/registro" element={<Register />} />
 
         {/* Páginas privadas */}
-        <Route path="/carrito" element={<Cart />} />
-        <Route path="/perfil" element={<Profile />} />
-        <Route path="/mis-datos" element={<MyData />} />
-        <Route path="/mis-publicaciones" element={<MyPublications />} />
-        <Route path="/crear-publicacion" element={<CreatePublication />} />
-        <Route path="/editar-publicacion/:id" element={<EditPublication />} />
+        <Route element={<RutaPrivada />}>
+          <Route path="/perfil" element={<Profile />} />
+          <Route path="/mis-datos" element={<MyData />} />
+        </Route>
+
+        {/* Cualquier usuario con sesión puede comprar y vender */}
+        <Route element={<RutaPrivada />}>
+          <Route path="/carrito" element={<Cart />} />
+          <Route path="/mis-publicaciones" element={<MyPublications />} />
+          <Route path="/crear-publicacion" element={<CreatePublication />} />
+          <Route path="/editar-publicacion/:id" element={<EditPublication />} />
+        </Route>
+
+        {/* Solo administrador */}
+        <Route element={<RutaPrivada roles={[ROLES.ADMINISTRADOR]} />}>
+          <Route path="/admin/usuarios" element={<AdminUsers />} />
+        </Route>
 
         {/*rutas inexistentes*/}
         <Route path="*" element={<NotFound />} />

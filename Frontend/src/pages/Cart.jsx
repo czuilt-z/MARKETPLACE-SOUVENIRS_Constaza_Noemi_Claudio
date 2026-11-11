@@ -1,10 +1,24 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import EstadoCarga from '../components/EstadoCarga'
+import { formatearPrecio, mensajeError } from '../api/utils'
 
 function Cart() {
-  const { carrito, eliminarDelCarrito, actualizarCantidad } = useCart()
+  const { carrito, cargando, eliminarDelCarrito, actualizarCantidad, vaciarCarrito } = useCart()
+  const [error, setError] = useState('')
+
+   const ejecutar = async (accion) => {
+    try {
+      setError('')
+      await accion()
+    } catch (err) {
+      setError(mensajeError(err))
+    }
+  }
 
   const total = carrito.reduce(
-    (acumulado, producto) => acumulado + producto.precio * producto.cantidad,
+    (acumulado, producto) => acumulado + producto.subtotal,
     0
   )
 
@@ -14,6 +28,9 @@ function Cart() {
       Mi carrito
     </h2>
 
+    {error && <div className="alert alert-danger py-2">{error}</div>}
+
+    <EstadoCarga cargando={cargando && carrito.length === 0}>
     {carrito.length === 0 ? (
       <div className="text-center py-5">
         <h5 style={{ color: '#67434A' }}>
@@ -22,6 +39,7 @@ function Cart() {
         <p className="text-muted">
           ¡Explora nuestros productos y encuentra algo especial!
         </p>
+        <Link to="/productos" className="btn btn-arotopia">Ver productos</Link>
       </div>
     ) : (
       <>
@@ -43,11 +61,13 @@ function Cart() {
                 </div>
 
                 <div className="col-md-5">
-                  <h5 className="fw-bold" style={{ color: '#67434A' }}>
-                    {producto.titulo}
-                  </h5>
+                  <Link to={`/productos/${producto.idPublicacion}`} className="text-decoration-none">
+                    <h5 className="fw-bold" style={{ color: '#67434A' }}>
+                      {producto.titulo}
+                    </h5>
+                  </Link>
                   <p className="text-muted mb-1">
-                    {producto.descripcion}
+                    {formatearPrecio(producto.precio)} c/u
                   </p>
                   <div className="d-flex align-items-center gap-2 mt-2">
                     <span className="fw-semibold">Cantidad:</span>
@@ -55,9 +75,9 @@ function Cart() {
                     <button
                       className="btn btn-outline-secondary btn-sm"
                       onClick={() =>
-                        actualizarCantidad(producto.id, producto.cantidad - 1)
+                        ejecutar(() => actualizarCantidad(producto.id, producto.cantidad - 1))
                       }
-                      disabled={producto.cantidad <= 1}
+                      disabled={producto.cantidad <= 1 || cargando}
                     >
                       −
                     </button>
@@ -69,8 +89,9 @@ function Cart() {
                     <button
                       className="btn btn-outline-secondary btn-sm"
                       onClick={() =>
-                        actualizarCantidad(producto.id, producto.cantidad + 1)
+                        ejecutar(() => actualizarCantidad(producto.id, producto.cantidad + 1))
                       }
+                      disabled={cargando}
                     >
                       +
                     </button>
@@ -79,14 +100,15 @@ function Cart() {
 
                 <div className="col-md-2">
                   <p className="fw-bold mb-0" style={{ color: '#67434A' }}>
-                    ${(producto.precio * producto.cantidad).toLocaleString('es-CL')}
+                    {formatearPrecio(producto.subtotal)}
                   </p>
                 </div>
 
                 <div className="col-md-2">
                   <button
                     className="btn btn-outline-danger btn-sm"
-                    onClick={() => eliminarDelCarrito(producto.id)}
+                    onClick={() => ejecutar(() => eliminarDelCarrito(producto.id))}
+                    disabled={cargando}
                   >
                     Eliminar
                   </button>
@@ -96,10 +118,20 @@ function Cart() {
           </div>
         ))}
 
-        <div className="d-flex justify-content-end mt-4">
+        <div className="d-flex justify-content-between align-items-end mt-4">
+          <button
+            className="btn btn-outline-danger"
+            onClick={() => {
+              if (window.confirm('¿Vaciar todo el carrito?')) ejecutar(vaciarCarrito)
+            }}
+            disabled={cargando}
+          >
+            Vaciar carrito
+          </button>
+
           <div className="text-end">
             <h5 className="fw-bold" style={{ color: '#67434A' }}>
-              Total: ${total.toLocaleString('es-CL')}
+              Total: {formatearPrecio(total)}
             </h5>
             <button className="btn btn-arotopia mt-2">
               Continuar compra
@@ -108,6 +140,7 @@ function Cart() {
         </div>
       </>
     )}
+    </EstadoCarga>
   </main>
  )
 }
