@@ -14,7 +14,15 @@
 
 - Express
 - PostgreSQL
-- bcrypt
+- pg
+- jsonwebtoken
+- bcryptjs
+- cors
+- dotenv
+- multer
+- pg-format
+- Jest
+- Supertest
 
 ## 3. Tecnologías complementarias
 
@@ -29,3 +37,4 @@
 # Comandos
 
 dev, build, lint y preview
+npm start, npm run dev, npm test

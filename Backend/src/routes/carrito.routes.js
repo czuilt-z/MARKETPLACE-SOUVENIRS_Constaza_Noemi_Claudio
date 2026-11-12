@@ -11,7 +11,7 @@ router.use(verificarToken, verificarRol(ROLES.USUARIO, ROLES.ADMINISTRADOR))
 router.get('/', carrito.obtener)
 router.post('/', validarCampos('id_publicacion'), carrito.agregar)
 
-/router.delete('/vaciar', carrito.vaciar)
+router.delete('/vaciar', carrito.vaciar)
 
 router.patch('/:id_detalle_carro', validarIds('id_detalle_carro'), validarCampos('cantidad'), carrito.actualizarCantidad)
 router.delete('/:id_detalle_carro', validarIds('id_detalle_carro'), carrito.eliminar)
